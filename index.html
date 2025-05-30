@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Laporan Hafalan Kosa Kata</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
+    #wordList div { background: white; margin: 5px 0; padding: 8px; border-radius: 5px; display: flex; gap: 10px; align-items: center; }
+    button.statusBtn { font-size: 20px; width: 30px; cursor: pointer; }
+    input { padding: 5px; margin-right: 10px; flex-grow: 1; }
+    #inputArea { display: flex; gap: 10px; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+
+  <h1>Laporan Hafalan Kosa Kata</h1>
+
+  <div id="inputArea">
+    <input id="inputWord" placeholder="Kosa kata" />
+    <input id="inputMeaning" placeholder="Arti kosa kata" />
+    <button id="addBtn">Tambah</button>
+  </div>
+
+  <div id="wordList"></div>
+
+  <script>
+    const STATUS = ["🔴", "🟡", "🟢"]; // belum, proses, hafal
+    let hafalan = JSON.parse(localStorage.getItem('hafalan')) || [];
+
+    function saveData() {
+      localStorage.setItem('hafalan', JSON.stringify(hafalan));
+    }
+
+    function renderList() {
+      const list = document.getElementById('wordList');
+      list.innerHTML = '';
+      hafalan.forEach((item, i) => {
+        const div = document.createElement('div');
+
+        const btn = document.createElement('button');
+        btn.textContent = STATUS[item.status];
+        btn.className = 'statusBtn';
+        btn.title = 'Klik untuk ganti status';
+        btn.onclick = () => {
+          item.status = (item.status + 1) % 3;
+          saveData();
+          renderList();
+        };
+
+        const kata = document.createElement('div');
+        kata.textContent = item.kata;
+        kata.style.flexGrow = '1';
+        kata.style.fontWeight = 'bold';
+
+        const arti = document.createElement('div');
+        arti.textContent = item.arti;
+        arti.style.flexGrow = '1';
+        arti.style.fontStyle = 'italic';
+        arti.style.color = '#555';
+
+        div.appendChild(btn);
+        div.appendChild(kata);
+        div.appendChild(arti);
+
+        list.appendChild(div);
+      });
+    }
+
+    document.getElementById('addBtn').addEventListener('click', () => {
+      const wordInput = document.getElementById('inputWord');
+      const meaningInput = document.getElementById('inputMeaning');
+      const kata = wordInput.value.trim();
+      const arti = meaningInput.value.trim();
+
+      if (!kata) {
+        alert('Kosa kata tidak boleh kosong!');
+        return;
+      }
+
+      hafalan.push({ kata, arti, status: 0 });
+      saveData();
+      renderList();
+
+      wordInput.value = '';
+      meaningInput.value = '';
+      wordInput.focus();
+    });
+
+    renderList();
+
+    // Register service worker untuk PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js').then(() => {
+        console.log('Service Worker terdaftar.');
+      });
+    }
+  </script>
+
+</body>
+</html>
